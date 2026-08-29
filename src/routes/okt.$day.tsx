@@ -313,14 +313,14 @@ function WorkoutPage() {
                 }`}
               >
                 <div className="flex items-center gap-2">
-                  <span className="w-14 text-sm font-bold">Sett {i + 1}</span>
-                  <div className="flex flex-1 items-center gap-1">
+                  <span className="w-10 shrink-0 text-xs font-bold text-muted-foreground">#{i + 1}</span>
+                  <div className="flex min-w-[68px] flex-1 items-center gap-1">
                     <input
                       inputMode="decimal"
                       value={s.weight}
                       onChange={(e) => update(active.id, i, { weight: e.target.value })}
                       placeholder="kg"
-                      className="h-12 w-full rounded-xl border border-input bg-card px-3 text-center text-base font-bold outline-none focus:border-primary"
+                      className="h-12 w-full min-w-0 rounded-xl border border-input bg-card px-3 text-center text-base font-bold outline-none focus:border-primary"
                     />
                     <span className="text-xs text-muted-foreground">kg</span>
                   </div>
@@ -331,7 +331,7 @@ function WorkoutPage() {
                           reps: String(Math.max(0, (parseInt(s.reps, 10) || 0) - 1)),
                         })
                       }
-                      className="flex size-11 items-center justify-center rounded-xl bg-secondary text-secondary-foreground"
+                      className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-secondary text-secondary-foreground"
                       aria-label="Færre reps"
                     >
                       <Minus className="size-4" />
@@ -340,13 +340,13 @@ function WorkoutPage() {
                       inputMode="numeric"
                       value={s.reps}
                       onChange={(e) => update(active.id, i, { reps: e.target.value })}
-                      className="h-12 w-12 rounded-xl border border-input bg-card text-center text-base font-bold outline-none focus:border-primary"
+                      className="h-12 w-11 shrink-0 rounded-xl border border-input bg-card text-center text-base font-bold outline-none focus:border-primary"
                     />
                     <button
                       onClick={() =>
                         update(active.id, i, { reps: String((parseInt(s.reps, 10) || 0) + 1) })
                       }
-                      className="flex size-11 items-center justify-center rounded-xl bg-secondary text-secondary-foreground"
+                      className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-secondary text-secondary-foreground"
                       aria-label="Flere reps"
                     >
                       <Plus className="size-4" />
@@ -354,7 +354,7 @@ function WorkoutPage() {
                   </div>
                   <button
                     onClick={() => completeSet(active.id, i, active.rest)}
-                    className={`flex size-12 items-center justify-center rounded-xl ${
+                    className={`flex size-12 shrink-0 items-center justify-center rounded-xl ${
                       s.done ? "bg-success text-success-foreground" : "gradient-hero text-primary-foreground"
                     }`}
                     aria-label="Fullfør sett"
