@@ -109,7 +109,10 @@ function WorkoutPage() {
   const [activity, setActivity] = useState("");
 
   const exercises = useMemo(
-    () => (plan?.exerciseIds ?? []).map((id) => state.exercises[id]).filter(Boolean),
+    () =>
+      (plan?.exerciseIds ?? [])
+        .map((id) => state.exercises[id])
+        .filter((e): e is NonNullable<typeof e> => Boolean(e)),
     [plan, state.exercises],
   );
 
