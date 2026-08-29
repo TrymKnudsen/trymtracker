@@ -10,33 +10,53 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as HistorikkRouteImport } from './routes/historikk'
+import { Route as OktDayRouteImport } from './routes/okt.$day'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const HistorikkRoute = HistorikkRouteImport.update({
+  id: '/historikk',
+  path: '/historikk',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OktDayRoute = OktDayRouteImport.update({
+  id: '/okt/$day',
+  path: '/okt/$day',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/historikk': typeof HistorikkRoute
+  '/okt/$day': typeof OktDayRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/historikk': typeof HistorikkRoute
+  '/okt/$day': typeof OktDayRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/historikk': typeof HistorikkRoute
+  '/okt/$day': typeof OktDayRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/historikk' | '/okt/$day'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/historikk' | '/okt/$day'
+  id: '__root__' | '/' | '/historikk' | '/okt/$day'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  HistorikkRoute: typeof HistorikkRoute
+  OktDayRoute: typeof OktDayRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +68,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/historikk': {
+      id: '/historikk'
+      path: '/historikk'
+      fullPath: '/historikk'
+      preLoaderRoute: typeof HistorikkRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/okt/$day': {
+      id: '/okt/$day'
+      path: '/okt/$day'
+      fullPath: '/okt/$day'
+      preLoaderRoute: typeof OktDayRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  HistorikkRoute: HistorikkRoute,
+  OktDayRoute: OktDayRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
