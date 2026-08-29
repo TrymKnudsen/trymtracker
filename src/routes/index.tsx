@@ -121,9 +121,9 @@ function WeightCard() {
             />
           </svg>
           <p className="mt-1 flex justify-between text-[11px] text-muted-foreground">
-            <span>{formatDate(raw[0].date)}</span>
+            <span>{formatDate(raw[0]!.date)}</span>
             <span className="font-semibold text-primary">7-dagers snitt</span>
-            <span>{formatDate(raw[raw.length - 1].date)}</span>
+            <span>{formatDate(raw[raw.length - 1]!.date)}</span>
           </p>
         </div>
       )}

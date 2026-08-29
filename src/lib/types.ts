@@ -31,7 +31,7 @@ export interface Exercise {
   repMax: number;
   rest: number; // sekunder
   increment: number; // kg-hopp
-  note?: string;
+  note?: string | undefined;
   /** Sist foreslåtte/oppdaterte arbeidsvekt i kg */
   currentWeight: number | null;
 }
@@ -63,7 +63,7 @@ export interface WorkoutSession {
   title: string;
   durationSec: number;
   entries: SessionExercise[];
-  freeActivity?: string;
+  freeActivity?: string | undefined;
 }
 
 export interface BodyWeightLog {

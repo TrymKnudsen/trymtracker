@@ -100,6 +100,7 @@ function WorkoutPage() {
   const navigate = useNavigate();
   const dayKey = day as DayKey;
   const plan = state.days.find((d) => d.day === dayKey);
+  const planTitle = plan?.title ?? "";
   const started = useRef(Date.now());
   const [rest, setRest] = useState<number | null>(null);
   const [current, setCurrent] = useState(0);
@@ -132,12 +133,12 @@ function WorkoutPage() {
 
   if (!plan) return <p className="p-6">Fant ikke økta.</p>;
 
-  const active = exercises[current];
+  const active = exercises[current]!;
 
   function update(exId: string, i: number, patch: Partial<SetDraft>) {
     setDrafts((d) => ({
       ...d,
-      [exId]: d[exId].map((s, idx) => (idx === i ? { ...s, ...patch } : s)),
+      [exId]: (d[exId] ?? []).map((s, idx) => (idx === i ? { ...s, ...patch } : s)),
     }));
   }
 
@@ -166,10 +167,10 @@ function WorkoutPage() {
       id: `${Date.now()}`,
       date: todayISO(),
       day: dayKey,
-      title: plan!.title,
+      title: planTitle,
       durationSec: Math.round((Date.now() - started.current) / 1000),
       entries,
-      freeActivity: activity || undefined,
+      ...(activity ? { freeActivity: activity } : {}),
     };
     setState((s) => applyProgression({ ...s, sessions: [...s.sessions, session] }, session));
     setSummary(session);
@@ -368,9 +369,9 @@ function WorkoutPage() {
                 setDrafts((d) => ({
                   ...d,
                   [active.id]: [
-                    ...d[active.id],
+                    ...(d[active.id] ?? []),
                     {
-                      weight: d[active.id].at(-1)?.weight ?? "",
+                      weight: d[active.id]?.at(-1)?.weight ?? "",
                       reps: String(active.repMax),
                       done: false,
                     },

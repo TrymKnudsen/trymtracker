@@ -22,7 +22,7 @@ export const Route = createFileRoute("/plan")({
 
 function ExerciseEditor({ ex }: { ex: Exercise }) {
   function patch(p: Partial<Exercise>) {
-    setState((s) => ({ ...s, exercises: { ...s.exercises, [ex.id]: { ...s.exercises[ex.id], ...p } } }));
+    setState((s) => ({ ...s, exercises: { ...s.exercises, [ex.id]: { ...s.exercises[ex.id]!, ...p } } }));
   }
   const fields: { label: string; key: keyof Exercise; step?: number }[] = [
     { label: "Sett", key: "sets" },
@@ -71,7 +71,7 @@ function DayCard({ day }: { day: DayKey }) {
     const ids = [...plan.exerciseIds];
     const j = i + dir;
     if (j < 0 || j >= ids.length) return;
-    [ids[i], ids[j]] = [ids[j], ids[i]];
+    [ids[i], ids[j]] = [ids[j]!, ids[i]!];
     updateDay({ exerciseIds: ids });
   }
 

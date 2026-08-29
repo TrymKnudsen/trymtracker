@@ -9,7 +9,7 @@ export function todayISO(d = new Date()): string {
 export function todayKey(d = new Date()): DayKey {
   // JS: 0 = søndag
   const idx = (d.getDay() + 6) % 7;
-  return DAY_ORDER[idx];
+  return DAY_ORDER[idx]!;
 }
 
 export function formatDate(iso: string): string {
