@@ -84,4 +84,26 @@ export interface AppState {
   sessions: WorkoutSession[];
   weights: BodyWeightLog[];
   settings: Settings;
+  checkins: DailyCheckin[];
+  dailyBriefings: DailyBriefing[];
+  coachMessages: CoachMessage[];
+}
+
+export interface DailyCheckin {
+  date: string; // yyyy-mm-dd
+  sleepScore: number; // 0-100
+  recovery: number; // 1-5
+  soreness: number; // 1-5
+  note?: string | undefined;
+}
+
+export interface DailyBriefing {
+  date: string;
+  text: string;
+}
+
+export interface CoachMessage {
+  role: "user" | "assistant";
+  content: string;
+  at: number;
 }

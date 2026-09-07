@@ -157,5 +157,8 @@ export function defaultState(): AppState {
     sessions: [],
     weights: [],
     settings: { targetPerWeek: 0.25, mode: "bulk", toleranse: 0.1 },
+    checkins: [],
+    dailyBriefings: [],
+    coachMessages: [],
   };
 }
