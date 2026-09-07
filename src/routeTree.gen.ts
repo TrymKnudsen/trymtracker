@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as CoachRouteImport } from './routes/coach'
 import { Route as HistorikkRouteImport } from './routes/historikk'
 import { Route as InnstillingerRouteImport } from './routes/innstillinger'
+import { Route as LopRouteImport } from './routes/lop'
 import { Route as PlanRouteImport } from './routes/plan'
 import { Route as OktDayRouteImport } from './routes/okt.$day'
 
@@ -36,6 +37,11 @@ const InnstillingerRoute = InnstillingerRouteImport.update({
   path: '/innstillinger',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LopRoute = LopRouteImport.update({
+  id: '/lop',
+  path: '/lop',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PlanRoute = PlanRouteImport.update({
   id: '/plan',
   path: '/plan',
@@ -52,6 +58,7 @@ export interface FileRoutesByFullPath {
   '/coach': typeof CoachRoute
   '/historikk': typeof HistorikkRoute
   '/innstillinger': typeof InnstillingerRoute
+  '/lop': typeof LopRoute
   '/plan': typeof PlanRoute
   '/okt/$day': typeof OktDayRoute
 }
@@ -60,6 +67,7 @@ export interface FileRoutesByTo {
   '/coach': typeof CoachRoute
   '/historikk': typeof HistorikkRoute
   '/innstillinger': typeof InnstillingerRoute
+  '/lop': typeof LopRoute
   '/plan': typeof PlanRoute
   '/okt/$day': typeof OktDayRoute
 }
@@ -69,21 +77,36 @@ export interface FileRoutesById {
   '/coach': typeof CoachRoute
   '/historikk': typeof HistorikkRoute
   '/innstillinger': typeof InnstillingerRoute
+  '/lop': typeof LopRoute
   '/plan': typeof PlanRoute
   '/okt/$day': typeof OktDayRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/coach' | '/historikk' | '/innstillinger' | '/plan' | '/okt/$day'
+    | '/'
+    | '/coach'
+    | '/historikk'
+    | '/innstillinger'
+    | '/lop'
+    | '/plan'
+    | '/okt/$day'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/coach' | '/historikk' | '/innstillinger' | '/plan' | '/okt/$day'
+  to:
+    | '/'
+    | '/coach'
+    | '/historikk'
+    | '/innstillinger'
+    | '/lop'
+    | '/plan'
+    | '/okt/$day'
   id:
     | '__root__'
     | '/'
     | '/coach'
     | '/historikk'
     | '/innstillinger'
+    | '/lop'
     | '/plan'
     | '/okt/$day'
   fileRoutesById: FileRoutesById
@@ -93,6 +116,7 @@ export interface RootRouteChildren {
   CoachRoute: typeof CoachRoute
   HistorikkRoute: typeof HistorikkRoute
   InnstillingerRoute: typeof InnstillingerRoute
+  LopRoute: typeof LopRoute
   PlanRoute: typeof PlanRoute
   OktDayRoute: typeof OktDayRoute
 }
@@ -127,6 +151,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof InnstillingerRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/lop': {
+      id: '/lop'
+      path: '/lop'
+      fullPath: '/lop'
+      preLoaderRoute: typeof LopRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/plan': {
       id: '/plan'
       path: '/plan'
@@ -149,6 +180,7 @@ const rootRouteChildren: RootRouteChildren = {
   CoachRoute: CoachRoute,
   HistorikkRoute: HistorikkRoute,
   InnstillingerRoute: InnstillingerRoute,
+  LopRoute: LopRoute,
   PlanRoute: PlanRoute,
   OktDayRoute: OktDayRoute,
 }
