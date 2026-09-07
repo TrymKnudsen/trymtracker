@@ -1,0 +1,224 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
+import { getState, resetState, setState, useAppState } from "@/lib/store";
+import { formatDate, sortedWeights, todayISO } from "@/lib/helpers";
+import type { AppState } from "@/lib/types";
+
+export const Route = createFileRoute("/innstillinger")({
+  head: () => ({
+    meta: [
+      { title: "Innstillinger – Treningslogg" },
+      {
+        name: "description",
+        content: "Sett mål-tempo for vektendring, bulk eller cut, og administrer lagrede data.",
+      },
+      { property: "og:title", content: "Innstillinger – Treningslogg" },
+      { property: "og:description", content: "Mål-tempo, modus og datahåndtering." },
+    ],
+  }),
+  component: SettingsPage,
+});
+
+const MODES = [
+  { key: "bulk", label: "Bulk", target: 0.25 },
+  { key: "vedlikehold", label: "Vedlikehold", target: 0 },
+  { key: "cut", label: "Cut", target: -0.5 },
+] as const;
+
+function BackupSection() {
+  const [exported, setExported] = useState<string | null>(null);
+  const [importText, setImportText] = useState("");
+  const [importError, setImportError] = useState<string | null>(null);
+  const [importedOk, setImportedOk] = useState(false);
+
+  async function handleExport() {
+    setImportError(null);
+    const json = JSON.stringify(getState(), null, 2);
+    const filename = `treningslogg-backup-${todayISO()}.json`;
+    const nav = navigator as Navigator & {
+      share?: (data: { files?: File[]; title?: string; text?: string }) => Promise<void>;
+      canShare?: (data: { files?: File[] }) => boolean;
+    };
+    try {
+      const file = new File([json], filename, { type: "application/json" });
+      if (nav.share && (!nav.canShare || nav.canShare({ files: [file] }))) {
+        await nav.share({ files: [file], title: filename });
+        return;
+      }
+    } catch {
+      /* faller tilbake til tekstvisning under */
+    }
+    setExported(json);
+  }
+
+  function handleImport() {
+    setImportError(null);
+    setImportedOk(false);
+    try {
+      const parsed = JSON.parse(importText) as Partial<AppState>;
+      if (!parsed || typeof parsed !== "object") throw new Error("Ugyldig format");
+      setState(() => ({ ...getState(), ...parsed }) as AppState);
+      setImportedOk(true);
+      setImportText("");
+    } catch {
+      setImportError(
+        "Kunne ikke lese denne teksten som gyldig backup-data. Sjekk at du limte inn hele JSON-en.",
+      );
+    }
+  }
+
+  return (
+    <section className="rounded-3xl border border-border bg-card p-5">
+      <h2 className="font-bold">Backup</h2>
+      <p className="mt-1 text-sm text-muted-foreground">
+        Ta en sikkerhetskopi av alle data før du gjør større endringer.
+      </p>
+      <button
+        onClick={handleExport}
+        className="tap-target mt-3 w-full rounded-2xl bg-secondary font-bold text-secondary-foreground"
+      >
+        Eksporter backup
+      </button>
+      {exported && (
+        <div className="mt-3">
+          <p className="mb-1 text-xs font-bold text-muted-foreground uppercase">
+            Kopier teksten under og lagre den et trygt sted
+          </p>
+          <textarea
+            readOnly
+            value={exported}
+            onFocus={(e) => e.currentTarget.select()}
+            className="h-40 w-full rounded-2xl border border-input bg-background p-3 font-mono text-xs"
+          />
+        </div>
+      )}
+
+      <div className="mt-5 border-t border-border pt-4">
+        <p className="mb-1 text-xs font-bold text-muted-foreground uppercase">Importer backup</p>
+        <textarea
+          value={importText}
+          onChange={(e) => setImportText(e.target.value)}
+          placeholder="Lim inn JSON-en fra en tidligere eksport her"
+          className="h-32 w-full rounded-2xl border border-input bg-background p-3 font-mono text-xs outline-none focus:border-primary"
+        />
+        <button
+          onClick={handleImport}
+          disabled={!importText.trim()}
+          className="tap-target mt-2 w-full rounded-2xl bg-destructive/10 font-bold text-destructive disabled:opacity-40"
+        >
+          Gjenopprett
+        </button>
+        {importError && (
+          <p className="mt-2 text-xs font-semibold text-destructive">{importError}</p>
+        )}
+        {importedOk && (
+          <p className="mt-2 text-xs font-semibold text-success">Data gjenopprettet ✓</p>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function SettingsPage() {
+  const state = useAppState();
+  const s = state.settings;
+
+  function patch(p: Partial<typeof s>) {
+    setState((prev) => ({ ...prev, settings: { ...prev.settings, ...p } }));
+  }
+
+  const weights = sortedWeights(state.weights).slice(-10).reverse();
+
+  return (
+    <div className="space-y-4">
+      <h1 className="text-3xl font-extrabold">Innstillinger</h1>
+
+      <section className="rounded-3xl border border-border bg-card p-5">
+        <h2 className="font-bold">Modus</h2>
+        <div className="mt-3 grid grid-cols-3 gap-2">
+          {MODES.map((m) => (
+            <button
+              key={m.key}
+              onClick={() => patch({ mode: m.key, targetPerWeek: m.target })}
+              className={`tap-target rounded-2xl text-sm font-bold ${
+                s.mode === m.key
+                  ? "gradient-hero text-primary-foreground"
+                  : "bg-secondary text-secondary-foreground"
+              }`}
+            >
+              {m.label}
+            </button>
+          ))}
+        </div>
+
+        <label className="mt-4 block text-sm font-bold">
+          Mål-tempo (kg per uke)
+          <input
+            inputMode="decimal"
+            value={s.targetPerWeek}
+            onChange={(e) =>
+              patch({ targetPerWeek: Number(e.target.value.replace(",", ".")) || 0 })
+            }
+            className="tap-target mt-1 w-full rounded-2xl border border-input bg-background px-4 text-lg font-extrabold outline-none focus:border-primary"
+          />
+        </label>
+        <label className="mt-3 block text-sm font-bold">
+          Toleranse (± kg per uke)
+          <input
+            inputMode="decimal"
+            value={s.toleranse}
+            onChange={(e) => patch({ toleranse: Number(e.target.value.replace(",", ".")) || 0.1 })}
+            className="tap-target mt-1 w-full rounded-2xl border border-input bg-background px-4 text-lg font-extrabold outline-none focus:border-primary"
+          />
+        </label>
+        <p className="mt-2 text-xs text-muted-foreground">
+          Standard for bulk er +0,20–0,30 kg per uke. Negativt tall gir cut-modus.
+        </p>
+      </section>
+
+      <section className="rounded-3xl border border-border bg-card p-5">
+        <h2 className="font-bold">Siste vektlogger</h2>
+        {weights.length === 0 ? (
+          <p className="mt-2 text-sm text-muted-foreground">Ingen vekter logget ennå.</p>
+        ) : (
+          <ul className="mt-2 space-y-1 text-sm">
+            {weights.map((w) => (
+              <li key={w.date} className="flex justify-between border-b border-border py-1.5">
+                <span>{formatDate(w.date)}</span>
+                <span className="font-bold">{w.weight} kg</span>
+                <button
+                  onClick={() =>
+                    setState((prev) => ({
+                      ...prev,
+                      weights: prev.weights.filter((x) => x.date !== w.date),
+                    }))
+                  }
+                  className="text-xs font-bold text-destructive"
+                >
+                  Slett
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      <BackupSection />
+
+      <section className="rounded-3xl border border-border bg-card p-5">
+        <h2 className="font-bold">Data</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Alt lagres lokalt på telefonen din – ingen konto, ingen sky.
+        </p>
+        <button
+          onClick={() => {
+            if (confirm("Nullstille alle data og gå tilbake til standardplanen?")) resetState();
+          }}
+          className="tap-target mt-3 w-full rounded-2xl bg-destructive/10 font-bold text-destructive"
+        >
+          Nullstill alle data
+        </button>
+      </section>
+    </div>
+  );
+}
