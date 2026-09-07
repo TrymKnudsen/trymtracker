@@ -78,6 +78,48 @@ export interface Settings {
   toleranse: number;
 }
 
+/* ---------- Løping ---------- */
+
+export type RunType = "rolig" | "intervall" | "terskel" | "langtur";
+
+export interface RunPrescription {
+  type: RunType;
+  description: string;
+  targetPaceSecPerKm: number;
+  targetDistanceKm: number | null;
+  targetDurationSec: number | null;
+}
+
+export interface RunLog {
+  id: string;
+  date: string;
+  day: DayKey;
+  type: RunType;
+  distanceKm: number;
+  durationSec: number;
+  avgPaceSecPerKm: number;
+  note?: string | undefined;
+}
+
+export interface RunPlanState {
+  week: Record<DayKey, RunType | null>;
+  baselineTest: { distanceKm: number; durationSec: number; date: string } | null;
+  goalDistanceKm: number;
+  goalPaceSecPerKm: number;
+}
+
+/* ---------- Påbegynt økt ---------- */
+
+export interface DraftSession {
+  day: DayKey;
+  date: string;
+  current: number;
+  skipped: string[];
+  activity: string;
+  drafts: Record<string, { weight: string; reps: string; done: boolean }[]>;
+  startedAt: number;
+}
+
 export interface AppState {
   exercises: Record<string, Exercise>;
   days: WorkoutDay[];
@@ -87,12 +129,16 @@ export interface AppState {
   checkins: DailyCheckin[];
   dailyBriefings: DailyBriefing[];
   coachMessages: CoachMessage[];
+  runPlan: RunPlanState;
+  runLogs: RunLog[];
+  draftSession: DraftSession | null;
 }
 
 export interface DailyCheckin {
   date: string; // yyyy-mm-dd
   sleepScore: number; // 0-100
-  recovery: number; // 1-5
+  /** antall timer til fullstendig restituert (Garmin Recovery Time) */
+  recoveryHours: number;
   soreness: number; // 1-5
   note?: string | undefined;
 }
