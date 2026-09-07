@@ -1,7 +1,11 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { CalendarDays, Check, Flame, Play, Scale, TrendingUp } from "lucide-react";
-import { setState, useAppState } from "@/lib/store";
+import { useEffect } from "react";
+import { useServerFn } from "@tanstack/react-start";
+import { CalendarDays, Check, Flame, HeartPulse, Play, Scale, Sparkles, TrendingUp } from "lucide-react";
+import { askCoach } from "@/lib/coach.functions";
+import { buildCoachContext } from "@/lib/coachContext";
+import { getState, setState, useAppState } from "@/lib/store";
 import {
   formatDate,
   movingAverage,
@@ -131,6 +135,156 @@ function WeightCard() {
   );
 }
 
+function Scale5({
+  value,
+  onChange,
+  labels,
+}: {
+  value: number;
+  onChange: (n: number) => void;
+  labels: [string, string];
+}) {
+  return (
+    <div>
+      <div className="flex gap-2">
+        {[1, 2, 3, 4, 5].map((n) => (
+          <button
+            key={n}
+            onClick={() => onChange(n)}
+            className={`tap-target press flex-1 rounded-2xl border text-base font-bold ${
+              value === n
+                ? "gradient-hero border-transparent text-primary-foreground"
+                : "border-border bg-background"
+            }`}
+          >
+            {n}
+          </button>
+        ))}
+      </div>
+      <p className="mt-1 flex justify-between text-[11px] text-muted-foreground">
+        <span>{labels[0]}</span>
+        <span>{labels[1]}</span>
+      </p>
+    </div>
+  );
+}
+
+function CheckinCard() {
+  const state = useAppState();
+  const today = todayISO();
+  const existing = state.checkins.find((c) => c.date === today);
+  const [sleep, setSleep] = useState("");
+  const [recovery, setRecovery] = useState(0);
+  const [soreness, setSoreness] = useState(0);
+
+  if (existing) {
+    return (
+      <section className="rounded-3xl border border-border bg-card p-5 shadow-soft">
+        <h2 className="flex items-center gap-2 text-lg font-bold">
+          <HeartPulse className="size-5 text-primary" /> Dagens egenrapportering
+        </h2>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Søvnscore {existing.sleepScore}/100 · restitusjon {existing.recovery}/5 · ømhet{" "}
+          {existing.soreness}/5
+        </p>
+      </section>
+    );
+  }
+
+  function save() {
+    const n = parseInt(sleep, 10);
+    if (!Number.isFinite(n) || n < 0 || n > 100 || !recovery || !soreness) return;
+    setState((s) => ({
+      ...s,
+      checkins: [
+        ...s.checkins.filter((c) => c.date !== today),
+        { date: today, sleepScore: n, recovery, soreness },
+      ],
+    }));
+  }
+
+  return (
+    <section className="space-y-3 rounded-3xl border border-border bg-card p-5 shadow-soft">
+      <h2 className="flex items-center gap-2 text-lg font-bold">
+        <HeartPulse className="size-5 text-primary" /> Hvordan er formen i dag?
+      </h2>
+      <div>
+        <p className="mb-1 text-xs font-bold text-muted-foreground uppercase">Søvnscore (0–100)</p>
+        <input
+          inputMode="numeric"
+          value={sleep}
+          onChange={(e) => setSleep(e.target.value)}
+          placeholder="Tall fra klokka"
+          className="tap-target w-full rounded-2xl border border-input bg-background px-4 text-lg font-semibold outline-none focus:border-primary"
+        />
+      </div>
+      <div>
+        <p className="mb-1 text-xs font-bold text-muted-foreground uppercase">Restitusjon</p>
+        <Scale5 value={recovery} onChange={setRecovery} labels={["Utladet", "Toppform"]} />
+      </div>
+      <div>
+        <p className="mb-1 text-xs font-bold text-muted-foreground uppercase">Ømhet</p>
+        <Scale5 value={soreness} onChange={setSoreness} labels={["Ingen", "Veldig øm"]} />
+      </div>
+      <button
+        onClick={save}
+        className="tap-target gradient-hero shadow-pop press w-full rounded-2xl text-base font-bold text-primary-foreground active:scale-95"
+      >
+        Lagre dagens sjekk
+      </button>
+    </section>
+  );
+}
+
+function BriefingCard() {
+  const state = useAppState();
+  const call = useServerFn(askCoach);
+  const today = todayISO();
+  const briefing = state.dailyBriefings.find((b) => b.date === today);
+  const hasWeight = state.weights.some((w) => w.date === today);
+  const hasCheckin = state.checkins.some((c) => c.date === today);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (briefing || !hasWeight || !hasCheckin || loading) return;
+    let cancelled = false;
+    setLoading(true);
+    call({ data: { mode: "briefing", context: buildCoachContext(getState()) } })
+      .then((res) => {
+        if (cancelled) return;
+        setState((s) => ({
+          ...s,
+          dailyBriefings: [
+            ...s.dailyBriefings.filter((b) => b.date !== today),
+            { date: today, text: res.text },
+          ],
+        }));
+      })
+      .catch(() => {})
+      .finally(() => !cancelled && setLoading(false));
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [briefing, hasWeight, hasCheckin]);
+
+  if (!hasWeight || !hasCheckin) return null;
+
+  return (
+    <section className="rounded-3xl border border-primary/30 bg-primary/5 p-5 shadow-soft">
+      <h2 className="flex items-center gap-2 text-lg font-bold">
+        <Sparkles className="size-5 text-primary" /> Morgenbriefing
+      </h2>
+      <p className="mt-2 text-sm leading-relaxed whitespace-pre-wrap">
+        {briefing?.text ?? (loading ? "Coachen leser dataene dine …" : "Ingen briefing i dag.")}
+      </p>
+      <Link to="/coach" className="mt-3 inline-block text-sm font-bold text-primary">
+        Spør coachen om noe →
+      </Link>
+    </section>
+  );
+}
+
 function Home() {
   const state = useAppState();
   const navigate = useNavigate();
@@ -163,6 +317,10 @@ function Home() {
       </header>
 
       <WeightCard />
+
+      <CheckinCard />
+
+      <BriefingCard />
 
       <section>
         <div className="mb-2 flex items-center justify-between">
@@ -210,6 +368,13 @@ function Home() {
         className="flex items-center justify-center gap-2 rounded-2xl border border-border bg-card p-4 text-base font-bold text-primary"
       >
         <TrendingUp className="size-5" /> Se utvikling per øvelse
+      </Link>
+
+      <Link
+        to="/coach"
+        className="flex items-center justify-center gap-2 rounded-2xl border border-border bg-card p-4 text-base font-bold text-primary"
+      >
+        <Sparkles className="size-5" /> Chat med AI-coachen
       </Link>
     </div>
   );

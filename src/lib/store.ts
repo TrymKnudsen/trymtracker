@@ -24,6 +24,9 @@ function hydrate() {
         ...base,
         ...parsed,
         settings: { ...base.settings, ...(parsed.settings ?? {}) },
+        checkins: parsed.checkins ?? [],
+        dailyBriefings: parsed.dailyBriefings ?? [],
+        coachMessages: parsed.coachMessages ?? [],
       };
     }
   } catch {
