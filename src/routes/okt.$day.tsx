@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Check, ChevronLeft, Minus, Plus, SkipForward, Trophy } from "lucide-react";
-import { setState, useAppState } from "@/lib/store";
+import { getState, setState, useAppState } from "@/lib/store";
 import {
   applyProgression,
   formatDuration,
@@ -9,7 +9,12 @@ import {
   sessionVolume,
   todayISO,
 } from "@/lib/helpers";
-import { DAY_NAMES, type DayKey, type WorkoutSession } from "@/lib/types";
+import {
+  DAY_NAMES,
+  type DayKey,
+  type DraftSession,
+  type WorkoutSession,
+} from "@/lib/types";
 import { Confetti } from "@/components/Confetti";
 
 export const Route = createFileRoute("/okt/$day")({
