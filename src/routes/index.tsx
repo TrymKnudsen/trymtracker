@@ -2,9 +2,10 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useEffect } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { CalendarDays, Check, Flame, HeartPulse, Play, Scale, Sparkles, TrendingUp } from "lucide-react";
+import { CalendarDays, Check, Flame, Footprints, HeartPulse, Play, Scale, Sparkles, TrendingUp } from "lucide-react";
 import { askCoach } from "@/lib/coach.functions";
 import { buildCoachContext } from "@/lib/coachContext";
+import { nextRunPrescription, paceSecPerKm, RUN_TYPE_NAMES } from "@/lib/running";
 import { getState, setState, useAppState } from "@/lib/store";
 import {
   formatDate,
