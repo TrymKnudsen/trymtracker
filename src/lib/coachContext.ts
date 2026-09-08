@@ -1,5 +1,6 @@
 import type { AppState } from "./types";
 import { exerciseHistory, isStagnating, sessionVolume, weightStatus } from "./helpers";
+import { formatPace } from "./running";
 
 /** Bygger en kompakt tekstkontekst av all treningsdata for AI-coachen. */
 export function buildCoachContext(state: AppState): string {
@@ -27,7 +28,19 @@ export function buildCoachContext(state: AppState): string {
   if (!checkins.length) lines.push("Ingen egenrapportering logget.");
   for (const c of checkins) {
     lines.push(
-      `${c.date}: søvnscore ${c.sleepScore}/100, restitusjon ${c.recovery}/5, ømhet ${c.soreness}/5${c.note ? ` – ${c.note}` : ""}`,
+      `${c.date}: søvnscore ${c.sleepScore}/100, Garmin anslår ${c.recoveryHours} timer til fullstendig restituert (høyt tall = trenger mer hvile), ømhet ${c.soreness}/5${c.note ? ` – ${c.note}` : ""}`,
+    );
+  }
+
+  lines.push("\n## Løping (mål: halvmaraton)");
+  lines.push(
+    `Mål: ${state.runPlan.goalDistanceKm} km i ${formatPace(state.runPlan.goalPaceSecPerKm)} snittfart.`,
+  );
+  const runs = [...state.runLogs].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 6);
+  if (!runs.length) lines.push("Ingen løpeturer logget ennå.");
+  for (const r of runs) {
+    lines.push(
+      `${r.date} – ${r.type}: ${r.distanceKm} km på ${Math.round(r.durationSec / 60)} min (${formatPace(r.avgPaceSecPerKm)})`,
     );
   }
 

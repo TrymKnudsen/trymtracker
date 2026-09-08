@@ -11,10 +11,12 @@ const schema = z.object({
 });
 
 const SYSTEM =
-  "Du er en personlig trenings- og helsecoach. Brukeren trener 6 dager i uken (Push/Pull/Legs-variant). " +
+  "Du er en personlig trenings- og helsecoach. Brukeren trener styrke 5 dager i uken (Push/Pull/Legs-variant) " +
+  "og løper mot et halvmaratonmål under 1:30. " +
   "Gi konkrete, korte råd basert på dataene under – ikke generiske treningstips. Vær ærlig hvis noe stagnerer " +
   "eller ser ut som overtrening. Skriv på norsk, kort og direkte, ingen unødvendig fyllstoff. " +
-  "Merk: søvn/HRV måles ikke automatisk – bruk brukerens egenrapportering som proxy for restitusjon.";
+  "Restitusjon rapporteres som Garmins Recovery Time i timer: høyt timetall betyr at kroppen trenger mer hvile, " +
+  "lavt eller null betyr klar for hard økt.";
 
 const BRIEFING_INSTRUCTION =
   "Gi en morgenbriefing på maks 120 ord: hvordan ligger vekta an mot målet, hvordan ser restitusjonen ut i dag, " +
