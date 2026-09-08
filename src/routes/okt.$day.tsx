@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Check, ChevronLeft, Minus, Plus, SkipForward, Trophy } from "lucide-react";
-import { setState, useAppState } from "@/lib/store";
+import { getState, setState, useAppState } from "@/lib/store";
 import {
   applyProgression,
   formatDuration,
@@ -9,7 +9,12 @@ import {
   sessionVolume,
   todayISO,
 } from "@/lib/helpers";
-import { DAY_NAMES, type DayKey, type WorkoutSession } from "@/lib/types";
+import {
+  DAY_NAMES,
+  type DayKey,
+  type DraftSession,
+  type WorkoutSession,
+} from "@/lib/types";
 import { Confetti } from "@/components/Confetti";
 
 export const Route = createFileRoute("/okt/$day")({
@@ -101,12 +106,29 @@ function WorkoutPage() {
   const dayKey = day as DayKey;
   const plan = state.days.find((d) => d.day === dayKey);
   const planTitle = plan?.title ?? "";
-  const started = useRef(Date.now());
+
+  const initialDraft = useRef(getState().draftSession);
+  const today = todayISO();
+  const mine =
+    initialDraft.current &&
+    initialDraft.current.day === dayKey &&
+    initialDraft.current.date === today
+      ? initialDraft.current
+      : null;
+  const otherDraft =
+    initialDraft.current &&
+    initialDraft.current.date === today &&
+    initialDraft.current.day !== dayKey
+      ? initialDraft.current
+      : null;
+  const [dismissedOther, setDismissedOther] = useState(false);
+
+  const started = useRef(mine?.startedAt ?? Date.now());
   const [rest, setRest] = useState<number | null>(null);
-  const [current, setCurrent] = useState(0);
-  const [skipped, setSkipped] = useState<string[]>([]);
+  const [current, setCurrent] = useState(mine?.current ?? 0);
+  const [skipped, setSkipped] = useState<string[]>(mine?.skipped ?? []);
   const [summary, setSummary] = useState<WorkoutSession | null>(null);
-  const [activity, setActivity] = useState("");
+  const [activity, setActivity] = useState(mine?.activity ?? "");
 
   const exercises = useMemo(
     () =>
@@ -116,7 +138,7 @@ function WorkoutPage() {
     [plan, state.exercises],
   );
 
-  const [drafts, setDrafts] = useState<Record<string, SetDraft[]>>({});
+  const [drafts, setDrafts] = useState<Record<string, SetDraft[]>>(mine?.drafts ?? {});
   useEffect(() => {
     setDrafts((prev) => {
       const next = { ...prev };
@@ -138,6 +160,19 @@ function WorkoutPage() {
 
   const active = exercises[current]!;
 
+  function saveDraft(over: Partial<DraftSession> = {}) {
+    const base: DraftSession = {
+      day: dayKey,
+      date: todayISO(),
+      current,
+      skipped,
+      activity,
+      drafts,
+      startedAt: started.current,
+    };
+    setState((s) => ({ ...s, draftSession: { ...base, ...over } }));
+  }
+
   function update(exId: string, i: number, patch: Partial<SetDraft>) {
     setDrafts((d) => ({
       ...d,
@@ -146,7 +181,12 @@ function WorkoutPage() {
   }
 
   function completeSet(exId: string, i: number, restSec: number) {
-    update(exId, i, { done: true });
+    const next = {
+      ...drafts,
+      [exId]: (drafts[exId] ?? []).map((s, idx) => (idx === i ? { ...s, done: true } : s)),
+    };
+    setDrafts(next);
+    saveDraft({ drafts: next });
     setRest(restSec);
   }
 
@@ -175,7 +215,12 @@ function WorkoutPage() {
       entries,
       ...(activity ? { freeActivity: activity } : {}),
     };
-    setState((s) => applyProgression({ ...s, sessions: [...s.sessions, session] }, session));
+    setState((s) =>
+      applyProgression(
+        { ...s, sessions: [...s.sessions, session], draftSession: null },
+        session,
+      ),
+    );
     setSummary(session);
   }
 

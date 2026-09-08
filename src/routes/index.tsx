@@ -2,9 +2,10 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useEffect } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { CalendarDays, Check, Flame, HeartPulse, Play, Scale, Sparkles, TrendingUp } from "lucide-react";
+import { CalendarDays, Check, Flame, Footprints, HeartPulse, Play, Scale, Sparkles, TrendingUp } from "lucide-react";
 import { askCoach } from "@/lib/coach.functions";
 import { buildCoachContext } from "@/lib/coachContext";
+import { nextRunPrescription, paceSecPerKm, RUN_TYPE_NAMES } from "@/lib/running";
 import { getState, setState, useAppState } from "@/lib/store";
 import {
   formatDate,
@@ -174,7 +175,7 @@ function CheckinCard() {
   const today = todayISO();
   const existing = state.checkins.find((c) => c.date === today);
   const [sleep, setSleep] = useState("");
-  const [recovery, setRecovery] = useState(0);
+  const [recoveryHours, setRecoveryHours] = useState("");
   const [soreness, setSoreness] = useState(0);
 
   if (existing) {
@@ -184,8 +185,8 @@ function CheckinCard() {
           <HeartPulse className="size-5 text-primary" /> Dagens egenrapportering
         </h2>
         <p className="mt-2 text-sm text-muted-foreground">
-          Søvnscore {existing.sleepScore}/100 · restitusjon {existing.recovery}/5 · ømhet{" "}
-          {existing.soreness}/5
+          Søvnscore {existing.sleepScore}/100 · {existing.recoveryHours} t til fullt restituert ·
+          ømhet {existing.soreness}/5
         </p>
       </section>
     );
@@ -193,12 +194,14 @@ function CheckinCard() {
 
   function save() {
     const n = parseInt(sleep, 10);
-    if (!Number.isFinite(n) || n < 0 || n > 100 || !recovery || !soreness) return;
+    const rh = parseInt(recoveryHours, 10);
+    if (!Number.isFinite(n) || n < 0 || n > 100) return;
+    if (!Number.isFinite(rh) || rh < 0 || !soreness) return;
     setState((s) => ({
       ...s,
       checkins: [
         ...s.checkins.filter((c) => c.date !== today),
-        { date: today, sleepScore: n, recovery, soreness },
+        { date: today, sleepScore: n, recoveryHours: rh, soreness },
       ],
     }));
   }
@@ -219,8 +222,16 @@ function CheckinCard() {
         />
       </div>
       <div>
-        <p className="mb-1 text-xs font-bold text-muted-foreground uppercase">Restitusjon</p>
-        <Scale5 value={recovery} onChange={setRecovery} labels={["Utladet", "Toppform"]} />
+        <p className="mb-1 text-xs font-bold text-muted-foreground uppercase">
+          Timer til fullt restituert (Garmin)
+        </p>
+        <input
+          inputMode="numeric"
+          value={recoveryHours}
+          onChange={(e) => setRecoveryHours(e.target.value)}
+          placeholder="F.eks. 18"
+          className="tap-target w-full rounded-2xl border border-input bg-background px-4 text-lg font-semibold outline-none focus:border-primary"
+        />
       </div>
       <div>
         <p className="mb-1 text-xs font-bold text-muted-foreground uppercase">Ømhet</p>
@@ -232,6 +243,92 @@ function CheckinCard() {
       >
         Lagre dagens sjekk
       </button>
+    </section>
+  );
+}
+
+function RunCard() {
+  const state = useAppState();
+  const key = todayKey();
+  const type = state.runPlan.week[key];
+  const [dist, setDist] = useState("");
+  const [min, setMin] = useState("");
+  const [sec, setSec] = useState("");
+  const [saved, setSaved] = useState(false);
+
+  if (!type) return null;
+  const rx = nextRunPrescription(type, state.runPlan, state.runLogs);
+  const loggedToday = state.runLogs.some((l) => l.date === todayISO());
+
+  function save() {
+    const d = parseFloat(dist.replace(",", "."));
+    const total = (parseInt(min, 10) || 0) * 60 + (parseInt(sec, 10) || 0);
+    if (!Number.isFinite(d) || d <= 0 || total <= 0) return;
+    setState((s) => ({
+      ...s,
+      runLogs: [
+        ...s.runLogs,
+        {
+          id: `${Date.now()}`,
+          date: todayISO(),
+          day: key,
+          type: type!,
+          distanceKm: d,
+          durationSec: total,
+          avgPaceSecPerKm: paceSecPerKm(d, total),
+        },
+      ],
+    }));
+    setDist("");
+    setMin("");
+    setSec("");
+    setSaved(true);
+    setTimeout(() => setSaved(false), 1600);
+  }
+
+  return (
+    <section className="rounded-3xl border border-border bg-card p-5 shadow-soft">
+      <h2 className="flex items-center gap-2 text-lg font-bold">
+        <Footprints className="size-5 text-primary" /> Dagens løpeøkt · {RUN_TYPE_NAMES[type]}
+      </h2>
+      <p className="mt-2 text-sm leading-relaxed">{rx.description}</p>
+      <div className="mt-3 flex gap-2">
+        <input
+          inputMode="decimal"
+          value={dist}
+          onChange={(e) => setDist(e.target.value)}
+          placeholder="km"
+          className="tap-target w-full min-w-0 rounded-2xl border border-input bg-background px-3 text-center text-base font-bold outline-none focus:border-primary"
+        />
+        <input
+          inputMode="numeric"
+          value={min}
+          onChange={(e) => setMin(e.target.value)}
+          placeholder="min"
+          className="tap-target w-full min-w-0 rounded-2xl border border-input bg-background px-3 text-center text-base font-bold outline-none focus:border-primary"
+        />
+        <input
+          inputMode="numeric"
+          value={sec}
+          onChange={(e) => setSec(e.target.value)}
+          placeholder="sek"
+          className="tap-target w-full min-w-0 rounded-2xl border border-input bg-background px-3 text-center text-base font-bold outline-none focus:border-primary"
+        />
+      </div>
+      <button
+        onClick={save}
+        className="tap-target gradient-hero shadow-pop press mt-3 w-full rounded-2xl text-base font-bold text-primary-foreground active:scale-95"
+      >
+        {saved ? "Lagret!" : "Logg løpetur"}
+      </button>
+      {loggedToday && (
+        <p className="mt-2 text-center text-xs font-semibold text-muted-foreground">
+          Du har logget en løpetur i dag 🏃
+        </p>
+      )}
+      <Link to="/lop" className="mt-3 inline-block text-sm font-bold text-primary">
+        Se løpeplan og historikk →
+      </Link>
     </section>
   );
 }
@@ -363,12 +460,22 @@ function Home() {
         </ul>
       </section>
 
+      <RunCard />
+
       <Link
         to="/historikk"
         className="flex items-center justify-center gap-2 rounded-2xl border border-border bg-card p-4 text-base font-bold text-primary"
       >
         <TrendingUp className="size-5" /> Se utvikling per øvelse
       </Link>
+
+      <Link
+        to="/lop"
+        className="flex items-center justify-center gap-2 rounded-2xl border border-border bg-card p-4 text-base font-bold text-primary"
+      >
+        <Footprints className="size-5" /> Løpeplan og historikk
+      </Link>
+
 
       <Link
         to="/coach"

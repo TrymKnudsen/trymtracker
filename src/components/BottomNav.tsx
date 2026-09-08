@@ -1,12 +1,13 @@
 import { Link } from "@tanstack/react-router";
-import { Dumbbell, Home, LineChart, Settings, Sparkles } from "lucide-react";
+import { Dumbbell, Footprints, Home, LineChart, Settings, Sparkles } from "lucide-react";
 
 const items = [
   { to: "/", label: "Hjem", icon: Home },
   { to: "/plan", label: "Plan", icon: Dumbbell },
+  { to: "/lop", label: "Løp", icon: Footprints },
   { to: "/historikk", label: "Utvikling", icon: LineChart },
   { to: "/coach", label: "Coach", icon: Sparkles },
-  { to: "/innstillinger", label: "Innstillinger", icon: Settings },
+  { to: "/innstillinger", label: "Mer", icon: Settings },
 ] as const;
 
 export function BottomNav() {
@@ -20,7 +21,7 @@ export function BottomNav() {
               activeOptions={{ exact: to === "/" }}
               activeProps={{ className: "text-primary" }}
               inactiveProps={{ className: "text-muted-foreground" }}
-              className="flex flex-col items-center gap-1 py-2.5 text-[11px] font-semibold"
+              className="flex flex-col items-center gap-1 py-2.5 text-[10px] font-semibold"
             >
               <Icon className="size-5" />
               {label}
