@@ -215,7 +215,12 @@ function WorkoutPage() {
       entries,
       ...(activity ? { freeActivity: activity } : {}),
     };
-    setState((s) => applyProgression({ ...s, sessions: [...s.sessions, session] }, session));
+    setState((s) =>
+      applyProgression(
+        { ...s, sessions: [...s.sessions, session], draftSession: null },
+        session,
+      ),
+    );
     setSummary(session);
   }
 
