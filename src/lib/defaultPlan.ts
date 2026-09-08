@@ -1,4 +1,5 @@
-import type { AppState, Exercise, MuscleGroup, WorkoutDay } from "./types";
+import { todayISO } from "./helpers";
+import type { AppState, Exercise, MuscleGroup, RunPlanState, WorkoutDay } from "./types";
 
 type Seed = [
   id: string,
@@ -100,6 +101,13 @@ const DAYS: WorkoutDay[] = [
   },
   {
     day: "tor",
+    title: "Hvile / Langtur",
+    subtitle: "Fri fra løft",
+    rest: true,
+    exerciseIds: [],
+  },
+  {
+    day: "fre",
     title: "Push B",
     subtitle: "Volum + teknikk",
     rest: false,
@@ -114,7 +122,7 @@ const DAYS: WorkoutDay[] = [
     ],
   },
   {
-    day: "fre",
+    day: "lor",
     title: "Pull B",
     subtitle: "Ryggtykkelse",
     rest: false,
@@ -128,20 +136,6 @@ const DAYS: WorkoutDay[] = [
     ],
   },
   {
-    day: "lor",
-    title: "Skulder / Arm",
-    subtitle: "Spesialisering",
-    rest: false,
-    exerciseIds: [
-      "shoulder-press-heavy",
-      "lateral-raise-hi",
-      "pushdown-bar",
-      "hammer-curl",
-      "crunch-machine-hi",
-      "leg-raises-15",
-    ],
-  },
-  {
     day: "son",
     title: "Hvile / Padel",
     subtitle: "Fri aktivitet",
@@ -149,6 +143,23 @@ const DAYS: WorkoutDay[] = [
     exerciseIds: [],
   },
 ];
+
+export function defaultRunPlan(): RunPlanState {
+  return {
+    week: {
+      man: null,
+      tir: "intervall",
+      ons: null,
+      tor: "langtur",
+      fre: "rolig",
+      lor: "terskel",
+      son: "rolig",
+    },
+    baselineTest: { distanceKm: 6, durationSec: 1620, date: todayISO() },
+    goalDistanceKm: 21.1,
+    goalPaceSecPerKm: 256,
+  };
+}
 
 export function defaultState(): AppState {
   return {
@@ -160,5 +171,8 @@ export function defaultState(): AppState {
     checkins: [],
     dailyBriefings: [],
     coachMessages: [],
+    runPlan: defaultRunPlan(),
+    runLogs: [],
+    draftSession: null,
   };
 }

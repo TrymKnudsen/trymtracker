@@ -23,10 +23,18 @@ function hydrate() {
       state = {
         ...base,
         ...parsed,
+        // days er appkonfigurasjon, ikke brukerdata – bruk alltid ny plandefinisjon
+        days: base.days,
         settings: { ...base.settings, ...(parsed.settings ?? {}) },
-        checkins: parsed.checkins ?? [],
+        checkins: (parsed.checkins ?? []).map((c) => ({
+          ...c,
+          recoveryHours: c.recoveryHours ?? 0,
+        })),
         dailyBriefings: parsed.dailyBriefings ?? [],
         coachMessages: parsed.coachMessages ?? [],
+        runPlan: { ...base.runPlan, ...(parsed.runPlan ?? {}) },
+        runLogs: parsed.runLogs ?? [],
+        draftSession: parsed.draftSession ?? null,
       };
     }
   } catch {
