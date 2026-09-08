@@ -460,12 +460,22 @@ function Home() {
         </ul>
       </section>
 
+      <RunCard />
+
       <Link
         to="/historikk"
         className="flex items-center justify-center gap-2 rounded-2xl border border-border bg-card p-4 text-base font-bold text-primary"
       >
         <TrendingUp className="size-5" /> Se utvikling per øvelse
       </Link>
+
+      <Link
+        to="/lop"
+        className="flex items-center justify-center gap-2 rounded-2xl border border-border bg-card p-4 text-base font-bold text-primary"
+      >
+        <Footprints className="size-5" /> Løpeplan og historikk
+      </Link>
+
 
       <Link
         to="/coach"
